@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Formulário VTal</title>
+
+<style>
+    :root {
+        --primary: #000;
+        --border: #d7d7d7;
+        --radius: 10px;
+        --shadow: 0 3px 10px rgba(0,0,0,0.05);
+    }
+
+    body {
+        font-family: "Inter", Arial, sans-serif;
+        background: #f5f6f8;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 440px; /* antes 520 — agora cabe perfeito */
+        width: 100%;
+        margin: 20px auto;
+        padding: 18px;
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+
+    .logo {
+        width: 150px;
+        display: block;
+        margin: 0 auto 18px auto;
+    }
+
+    h2 {
+        text-align: center;
+        font-weight: 700;
+        font-size: 20px;
+        margin-bottom: 22px;
+    }
+
+    label {
+        font-weight: 600;
+        margin-top: 14px;
+        display: block;
+        font-size: 14px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        margin-top: 5px;
+        font-size: 14px;
+        background: #fafafa;
+        box-sizing: border-box; /* impede ultrapassagens */
+    }
+
+    textarea {
+        height: 110px;
+    }
+
+    /* CAMPOS LADO A LADO */
+    .row-two {
+        display: flex;
+        gap: 10px; /* diminui o espaçamento */
+        margin-top: 5px;
+    }
+    .row-two .field {
+        flex: 1;
+        min-width: 0; /* EVITA ESTOURAR A LARGURA */
+    }
+
+    @media (max-width: 480px) {
+        .row-two {
+            flex-direction: column;
+            gap: 0;
+        }
+    }
+
+    /* CHIPS */
+    .chips-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .chip {
+        background: #efefef;
+        border: 1px solid #ccc;
+        padding: 5px 11px;
+        border-radius: 16px;
+        font-size: 13px;
+    }
+
+    .chip span {
+        margin-left: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    /* AUTOCOMPLETE */
+    .autocomplete-list {
+        border: 1px solid var(--border);
+        border-top: none;
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        position: absolute;
+        width: 100%;
+        z-index: 20;
+        box-sizing: border-box;
+        border-radius: 0 0 var(--radius) var(--radius);
+        box-shadow: var(--shadow);
+    }
+
+    .autocomplete-item {
+        padding: 12px;
+        font-size: 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+
+    .autocomplete-item:hover {
+        background: #f7f7f7;
+    }
+
+    /* BOTÃO */
+    button {
+        width: 100%;
+        margin-top: 22px;
+        padding: 14px;
+        background: var(--primary);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+    }
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <img src="vtal_logo.png" class="logo">
+    <h2>Formulário de Visita</h2>
+
+    <form id="vtalForm">
+
+        <!-- OPERADORA + DATA LADO A LADO -->
+        <div class="row-two">
+            <div class="field">
+                <label for="operadora">Operadora</label>
+                <select id="operadora" name="operadora" required>
+                    <option value="">Selecione...</option>
+                    <option>Claro</option>
+                    <option>TIM</option>
+                    <option>Vivo</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="data_visita">Data</label>
+                <input type="date" id="data_visita" name="data_visita" required>
+            </div>
+        </div>
+
+        <!-- TIPO DE VISITA -->
+        <label for="tipo_visita">Tipo de Visita</label>
+        <select id="tipo_visita" name="tipo_visita" required>
+            <option value="">Selecione...</option>
+            <option>Administrativa</option>
+            <option>Negócios</option>
+            <option>Relacionamento</option>
+        </select>
+
+        <!-- PRODUTO -->
+        <label for="produto">Produto</label>
+        <select id="produto" name="produto" required>
+            <option value="">Selecione...</option>
+            <option>DAS</option>
+            <option>SLS</option>
+            <option>ENERGIA</option>
+            <option>OUTROS</option>
+        </select>
+
+        <!-- VENUES -->
+        <label for="venueInput">Venues (múltiplas)</label>
+        <input type="text" id="venueInput" placeholder="Digite para buscar...">
+        <div id="autocompleteList" class="autocomplete-list" style="display:none;"></div>
+
+        <div class="chips-container" id="chipsContainer"></div>
+
+        <!-- OBSERVAÇÕES -->
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes"></textarea>
+
+        <button type="submit">Enviar</button>
+    </form>
+</div>
+
+<script>
+/* ---------------- VENUES LIST ---------------- */
+const venues = [
+"MOBILIÁRIO URBANO EM BELÉM - PA","[SLS] AMERICANAS S.A","[SLS] BRT SOROCABA","[SLS] GROTTA MALL",
+"[SLS] MARINA ITAJAÍ","[SLS] NA PRAIA","PARQUE ESTADIAL DO UTINGA","VALE DO ANHANGABAU","MERCURE SAVASSI",
+"IBIS BUDGET MANAUS","IBIS BUDGET PIRACICABA","IBIS BUDGET SÃO PAULO MORUMBI","IBIS FORTALEZA","IBIS GOIÂNIA",
+"IBIS INTERLAGOS","IBIS PAULÍNIA","IBIS PIRACICABA","IBIS SÃO CARLOS","IBIS SÃO JOSÉ DO RIO PRETO",
+"IBIS SÃO JOSÉ DOS CAMPOS DUTRA","IBIS SÃO PAULO MORUMBI","IBIS SOROCABA","MGALLERY SANTA TERESA",
+"NOVOTEL SÃO JOSÉ DOS CAMPOS","PULLMAN GUARULHOS","AEME SHOPPING","CAMPO GRANDE","ESTAÇÃO BH","GOIÂNIA",
+"METRÔ SANTA CRUZ","SÃO BERNARDO PLAZA","SHOPPING MANAUARA","TAMBORÉ","VILA VELHA","VILLA LOBOS",
+"MONTES CLAROS SHOPPING","PATIO CENTRAL SHOPPING - PATOS DE MINAS","ORIZZONTE NITERÓI","SEDE BB",
+"BEST CENTER ARARAQUARA - AV. 36","BEST CENTER ATIBAIA - LAGO","BEST CENTER AVARÉ - MAJOR RANGEL",
+"BEST CENTER BOITUVA - JARDIM FLAMBOYANT","BEST CENTER BRAGANÇA PAULISTA - LAGO SUL",
+"BEST CENTER CAMPINAS - CHÁCARA PRIMAVERA","BEST CENTER CAMPINAS - PARQUE PRADO","BEST CENTER CAMPINAS - TAQUARAL",
+"BEST CENTER COTIA - JOSÉ GIORGI","BEST CENTER COTIA - PÁTIO COTIA","BEST CENTER COTIA - SÃO CAMILO",
+"BEST CENTER DIADEMA - CENTRO","BEST CENTER EMBU DAS ARTES - ELIAS YAZBEK","BEST CENTER GUARATINGUETÁ - PEDREGULHO",
+"BEST CENTER HORTOLÂNDIA - OLÍVIO FRANCESCHINI","BEST CENTER INDAIATUBA - ITAICI",
+"BEST CENTER INDAIATUBA - PARQUE ECOLÓGICO","BEST CENTER ITAPETININGA - VILA RIO BRANCO","BEST CENTER ITATIBA - CENTRO",
+"BEST CENTER JACAREÍ - CENTRO","BEST CENTER JACAREÍ - VILLA BRANCA","BEST CENTER MACAÉ - GLÓRIA",
+"BEST CENTER MOGI DAS CRUZES - CENTRO","BEST CENTER MOGI MIRIM - CENTRO","BEST CENTER PAULÍNIA - JARDIM AMÉRICA",
+"BEST CENTER PIRACICABA - AV. BRASÍLIA","BEST CENTER PIRACICABA - RIO DAS PEDRAS",
+"BEST CENTER PIRASSUNUNGA - JOAQUIM MENDES","BEST CENTER RIBEIRÃO PRETO - GUAPORÉ",
+"BEST CENTER SANTO ANDRÉ - PIRELLI","BEST CENTER SÃO JOÃO DE MERITI - VILAR DOS TELES",
+"BEST CENTER SÃO JOSÉ DO RIO PRETO - JOSÉ MUNIA","BEST CENTER SÃO JOSÉ DOS CAMPOS - URBANOVA",
+"BEST CENTER SÃO PAULO - ELLIS MAAS","BEST CENTER SÃO PAULO - MIGUEL YUNES","BEST CENTER SÃO PAULO - PANAMBY",
+"BEST CENTER SÃO PAULO - VERBO DIVINO","BEST CENTER SOROCABA - HORTO FLORESTAL","BEST CENTER SOROCABA - PANNUNZIO",
+"BEST CENTER SUMARÉ - VILLA FLORA","BEST CENTER TAUBATÉ - PADRE FISCHER","BEST CENTER VINHEDO - BENEDITO STORANI",
+"BRASÍLIA SQUARE OFFICES & MALL","INTELI","CLUB ATHLETICO PARANAENSE (LIGGA ARENA)",
+"TÚNEL SUBIDA E TÚNEL CONTORNO NORTE E SUL","CORUMBA SHOPPING","COSTA BRAVA","DUNAS SHOPPING",
+"BEIRA RIO (INTERNACIONAL)","SENADO","GPA","GRUPO CARNAÚBA","SP CATARINA AIRPORT",
+"METROPOLITAN BUSINESS CENTER (TORRE + MALL)","MIDWAY MALL","METRÔ LINHA 4 AMARELA","VLT CARIOCA",
+"EXPOMINAS","PARTAGE BRASÍLIA","PARTAGE POÇOS DE CALDAS","CÂMARA DOS DEPUTADOS",
+"QUALITY BARRA DA TIJUCA","JARDIM BOTÂNICO DE SÃO PAULO","ZOOLOGICO DE SÃO PAULO","SHOPPING DA ILHA",
+"CA CIDADE NOVA","EDIFÍCIO CENTRO EMPRESARIAL ARCOS DA LAPA","EDIFÍCIO CITY TOWER","EDIFÍCIO GENERALI",
+"EDIFÍCIO LATITUDE / DENASA","EDIFÍCIO PASSEIO","EDIFÍCIO PASTEUR 110","EDIFÍCIO PASTEUR 154",
+"EDIFÍCIO PAULISTA OFFICE PARK","EDIFÍCIO VISCONDE DE OURO PRETO","GLOBALTECH","POLO CARUARU",
+"SHOPPING PRAIA DA COSTA","VILA GALÉ RIO DE JANEIRO","ÁGUAS CLARAS SHOPPING","ESTÁDIO MANÉ GARRINCHA",
+"ARENA PERNAMBUCO","ESTÁDIO MANGUEIRÃO","AC CAMARGO - UNIDADE ANTONIO PRUDENTE",
+"AC CAMARGO - UNIDADE ITAIM BIBI","BOTAFOGO AS","B3","BENDITO CACAO","ESTADIO MOISÉS LUCARELLI",
+"FELICITÁ","FRIBURGO SHOPPING","HOSPITAL ADVENTISTA DE MANAUS","HOSPITAL PORTO DIAS",
+"HOTEL W","NORTH SHOPPING BARRETOS","SANTA MARIA SHOPPING","SHOPPING MUELLER CURITIBA",
+"SHOPPING PRÊMIO SOCORRO","SHOPPING ROYAL PLAZA","BEYOND THE CLUB"
+];
+
+/* ---------------- AUTOCOMPLETE + CHIPS ---------------- */
+let selectedVenues = [];
+
+const venueInput = document.getElementById("venueInput");
+const list = document.getElementById("autocompleteList");
+const chipsContainer = document.getElementById("chipsContainer");
+
+venueInput.addEventListener("input", () => {
+    const value = venueInput.value.toLowerCase();
+    list.innerHTML = "";
+    list.style.display = "none";
+
+    if (value.length < 1) return;
+
+    const filtered = venues.filter(v => 
+        v.toLowerCase().includes(value) && !selectedVenues.includes(v)
+    );
+
+    if (filtered.length === 0) return;
+
+    list.style.display = "block";
+
+    filtered.forEach(item => {
+        const div = document.createElement("div");
+        div.classList.add("autocomplete-item");
+        div.textContent = item;
+
+        div.addEventListener("click", () => {
+            addChip(item);
+            venueInput.value = "";
+            list.style.display = "none";
+        });
+
+        list.appendChild(div);
+    });
+});
+
+function addChip(name) {
+    if (selectedVenues.includes(name)) return;
+
+    selectedVenues.push(name);
+
+    const chip = document.createElement("div");
+    chip.classList.add("chip");
+    chip.innerHTML = `${name} <span data-value="${name}">×</span>`;
+
+    chip.querySelector("span").addEventListener("click", (e) => {
+        removeChip(e.target.getAttribute("data-value"));
+    });
+
+    chipsContainer.appendChild(chip);
+}
+
+function removeChip(name) {
+    selectedVenues = selectedVenues.filter(v => v !== name);
+    chipsContainer.innerHTML = "";
+    selectedVenues.forEach(v => addChip(v));
+}
+
+/* ---------------- ENVIAR FORMULÁRIO ---------------- */
+document.getElementById("vtalForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const payload = {
+        operadora: document.getElementById("operadora").value,
+        data_visita: document.getElementById("data_visita").value,
+        tipo_visita: document.getElementById("tipo_visita").value,
+        produto: document.getElementById("produto").value,
+        venues: selectedVenues.join("; "),
+        observacoes: document.getElementById("observacoes").value
+    };
+
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxj7iDW7NHCbr-MKTKHyg4UP8jqniqKp0PM_LXck01FMvVEKT4RP--quqTVMCAFY_ls/exec";
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        setTimeout(() => {
+            window.location.href = "success.html";
+        }, 300);
+
+    } catch (error) {
+        alert("Falha ao enviar os dados.");
+    }
+});
+</script>
+
+</body>
+</html>
